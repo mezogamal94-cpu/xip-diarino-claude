@@ -1,6 +1,6 @@
 import { useRef, useState } from "react";
 import { Modal, View, Text, Pressable, StyleSheet, PanResponder, ActivityIndicator, Alert } from "react-native";
-import MapView, { Marker, Circle as MapCircle, Region } from "react-native-maps";
+import MapView, { Marker, MapCircle, Region } from '../shared/MapView';
 import * as Location from "expo-location";
 import Svg, { Path, Circle } from "react-native-svg";
 import { LocationPermissionGate } from "./LocationPermissionGate";
