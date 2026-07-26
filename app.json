@@ -1,70 +1,122 @@
-import { useSyncExternalStore } from "react";
-import { SavedLive } from "../../data/saved-live-types";
-
-// ↔ `let savedLives = []` in app-viewer.html. myAds moved to
-// lib/hooks/useProperties.ts and myRequests moved to lib/hooks/useRequests.ts
-// (both real Supabase tables) — savedLives stays local-only for its CRUD
-// convenience wrappers (pin/publish/comments-toggle), even though the
-// recording lifecycle itself is backed by the `lives` table's columns.
-
-const MAX_PINNED = 3; // ↔ the "الحد الأقصى ٣" check in togglePinLive()
-
-let savedLives: SavedLive[] = [];
-const listeners = new Set<() => void>();
-
-function emit() {
-  listeners.forEach((l) => l());
-}
-function subscribe(listener: () => void) {
-  listeners.add(listener);
-  return () => listeners.delete(listener);
-}
-function getSnapshot() {
-  return { savedLives };
-}
-
-// ↔ the savedEntry push at the end of endBroadcast()
-export function addSavedLive(live: SavedLive) {
-  savedLives = [live, ...savedLives];
-  emit();
-}
-export function updateSavedLive(id: string, patch: Partial<SavedLive>) {
-  savedLives = savedLives.map((l) => (l.id === id ? { ...l, ...patch } : l));
-  emit();
-}
-export function removeSavedLive(id: string) {
-  savedLives = savedLives.filter((l) => l.id !== id);
-  emit();
-}
-// ↔ togglePinLive()
-export function togglePinLive(id: string): "pinned" | "unpinned" | "limit" {
-  const l = savedLives.find((x) => x.id === id);
-  if (!l) return "unpinned";
-  if (l.pinned) {
-    updateSavedLive(id, { pinned: false });
-    return "unpinned";
+{
+  "expo": {
+    "name": "Diarino",
+    "slug": "diarino",
+    "scheme": "diarino",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "userInterfaceStyle": "automatic",
+    "icon": "./assets/icon.png",
+    "backgroundColor": "#0b1512",
+    "primaryColor": "#22A652",
+    "assetBundlePatterns": [
+      "**/*"
+    ],
+    "plugins": [
+      "expo-router",
+      [
+        "expo-splash-screen",
+        {
+          "image": "./assets/splash.png",
+          "resizeMode": "contain",
+          "backgroundColor": "#0b1512"
+        }
+      ],
+      [
+        "@livekit/react-native-expo-plugin",
+        {
+          "android": {
+            "audioType": "communication"
+          }
+        }
+      ],
+      "@config-plugins/react-native-webrtc",
+      [
+        "expo-camera",
+        {
+          "cameraPermission": "يحتاج ديارينو للوصول إلى الكاميرا لبدء بث مباشر لعقارك.",
+          "microphonePermission": "يحتاج ديارينو للوصول إلى الميكروفون أثناء البث المباشر."
+        }
+      ],
+      [
+        "expo-location",
+        {
+          "locationWhenInUsePermission": "يحتاج ديارينو للوصول لموقعك لعرض العقارات القريبة منك ضمن نطاق تختاره."
+        }
+      ],
+      [
+        "expo-image-picker",
+        {
+          "photosPermission": "يحتاج ديارينو للوصول إلى الصور لإرفاقها في المحادثات وعند نشر إعلانك.",
+          "cameraPermission": "يحتاج ديارينو للوصول إلى الكاميرا لالتقاط صور لعقارك."
+        }
+      ],
+      [
+        "expo-build-properties",
+        {
+          "android": {
+            "kotlinVersion": "1.9.25",
+            "compileSdkVersion": 35,
+            "targetSdkVersion": 35,
+            "buildToolsVersion": "35.0.0"
+          },
+          "ios": {
+            "deploymentTarget": "15.1"
+          }
+        }
+      ]
+    ],
+    "ios": {
+      "bundleIdentifier": "com.diarino.app",
+      "buildNumber": "1",
+      "supportsTablet": false,
+      "infoPlist": {
+        "NSCameraUsageDescription": "يحتاج ديارينو للوصول إلى الكاميرا لبدء بث مباشر لعقارك.",
+        "NSMicrophoneUsageDescription": "يحتاج ديارينو للوصول إلى الميكروفون أثناء البث المباشر ولتسجيل الفيديوهات.",
+        "NSLocationWhenInUseUsageDescription": "يحتاج ديارينو للوصول لموقعك لعرض العقارات القريبة منك ضمن نطاق تختاره.",
+        "NSPhotoLibraryUsageDescription": "يحتاج ديارينو للوصول إلى مكتبة الصور لإرفاقها في المحادثات وعند نشر إعلانك."
+      },
+      "bitcode": false
+    },
+    "android": {
+      "package": "com.diarino.app",
+      "versionCode": 1,
+      "adaptiveIcon": {
+        "foregroundImage": "./assets/adaptive-icon.png",
+        "backgroundColor": "#0b1512"
+      },
+      "permissions": [
+        "android.permission.CAMERA",
+        "android.permission.RECORD_AUDIO",
+        "android.permission.MODIFY_AUDIO_SETTINGS",
+        "android.permission.BLUETOOTH",
+        "android.permission.BLUETOOTH_CONNECT",
+        "android.permission.ACCESS_FINE_LOCATION",
+        "android.permission.ACCESS_COARSE_LOCATION",
+        "android.permission.READ_EXTERNAL_STORAGE",
+        "android.permission.WRITE_EXTERNAL_STORAGE",
+        "android.permission.ACCESS_NETWORK_STATE",
+        "android.permission.INTERNET",
+        "android.permission.SYSTEM_ALERT_WINDOW",
+        "android.permission.WAKE_LOCK"
+      ],
+      "config": {
+        "googleMaps": {
+          "apiKey": "REPLACE_WITH_YOUR_ANDROID_MAPS_API_KEY"
+        }
+      }
+    },
+    "web": {
+      "favicon": "./assets/favicon.png",
+      "bundler": "metro"
+    },
+    "extra": {
+      "router": {
+        "origin": false
+      },
+      "eas": {
+        "projectId": "e604f824-425d-4999-9102-8012ed1f7613"
+      }
+    }
   }
-  if (savedLives.filter((x) => x.pinned).length >= MAX_PINNED) return "limit";
-  updateSavedLive(id, { pinned: true, pinnedAt: Date.now() });
-  return "pinned";
-}
-// ↔ publishSavedLive()/unpublishSavedLive()
-export function toggleSavedLivePublic(id: string) {
-  const l = savedLives.find((x) => x.id === id);
-  if (!l) return;
-  updateSavedLive(id, { publishedPublic: !l.publishedPublic });
-}
-// ↔ _applyToggleSavedLiveComments()
-export function toggleSavedLiveComments(id: string) {
-  const l = savedLives.find((x) => x.id === id);
-  if (!l) return;
-  updateSavedLive(id, { commentsHidden: !l.commentsHidden });
-}
-
-export function useMyContent() {
-  const snap = useSyncExternalStore(subscribe, getSnapshot);
-  return {
-    savedLives: snap.savedLives,
-    addSavedLive, updateSavedLive, removeSavedLive, togglePinLive, toggleSavedLivePublic, toggleSavedLiveComments,
-  };
 }
